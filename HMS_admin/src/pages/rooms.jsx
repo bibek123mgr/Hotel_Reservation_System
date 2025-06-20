@@ -12,6 +12,8 @@ const Rooms = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [openMenuId, setOpenMenuId] = useState(null);
     const [roomList, setRoomList] = useState([]);
+    const [roomToEdit, setRoomToEdit] = useState(null);
+
     const dispatch = useDispatch();
     const menuRef = useRef(null);
 
@@ -57,9 +59,9 @@ const Rooms = () => {
         }
     };
 
-    const handleEdit = (roomId) => {
-        console.log(`Edit room with ID: ${roomId}`);
-        // Implement edit logic
+    const handleEdit = (room) => {
+        setRoomToEdit(room);
+        setIsModalOpen(true);
     };
 
     const handleDelete = async (roomId) => {
@@ -95,6 +97,23 @@ const Rooms = () => {
         maintenance: roomList.filter(r => r.roomStatus === "MAINTENANCE").length,
     };
 
+    // Helpers
+
+    const statusColor = (status) => {
+        switch (status?.toUpperCase()) {
+            case "AVAILABLE":
+                return "emerald";
+            case "OCCUPIED":
+                return "red";
+            case "CLEANING":
+                return "amber";
+            case "MAINTENANCE":
+                return "gray";
+            default:
+                return "blue";
+        }
+    };
+
     useEffect(() => {
         fetchRooms();
     }, [dispatch]);
@@ -119,7 +138,17 @@ const Rooms = () => {
                 </div>
             </div>
 
-            {isModalOpen && <RoomPostForm open={isModalOpen} onClose={() => setIsModalOpen(false)} />}
+            {isModalOpen && (
+                <RoomPostForm
+                    open={isModalOpen}
+                    onClose={() => {
+                        setIsModalOpen(false);
+                        setRoomToEdit(null);
+                    }}
+                    fetchRooms={fetchRooms}
+                    roomToEdit={roomToEdit}
+                />
+            )}
 
             <div className="bg-white shadow rounded-lg mb-6">
                 <div className="px-6 py-4 border-b border-gray-200">
@@ -147,7 +176,11 @@ const Rooms = () => {
                                     ? `bg-${statusColor(key)}-600 text-white`
                                     : `bg-white text-${statusColor(key)}-600 border border-${statusColor(key)}-600`
                                     }`}
-                                onClick={() => setFilter(key)}
+                                onClick={() => {
+
+                                    console.log(key);
+                                    setFilter(key)
+                                }}
                             >
                                 {capitalize(key)} ({count})
                             </button>
@@ -194,7 +227,7 @@ const Rooms = () => {
                                         <div className="border-t border-gray-200" />
                                         <div className="py-2">
                                             <button
-                                                onClick={() => handleEdit(room.id)}
+                                                onClick={() => handleEdit(room)}
                                                 className="flex items-center w-full gap-2 px-4 py-2 text-sm text-blue-700 hover:bg-blue-50 transition-colors"
                                             >
                                                 ✏️ <span>Edit Room</span>
@@ -235,17 +268,7 @@ const Rooms = () => {
     );
 };
 
-// Helpers
 
-const statusColor = (status) => {
-    switch (status.toUpperCase()) {
-        case "AVAILABLE": return "emerald";
-        case "OCCUPIED": return "red";
-        case "CLEANING": return "amber";
-        case "MAINTENANCE": return "gray";
-        default: return "blue";
-    }
-};
 
 const capitalize = (str) => str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
 

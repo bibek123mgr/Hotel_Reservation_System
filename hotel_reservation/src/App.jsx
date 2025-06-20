@@ -1,4 +1,4 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, useNavigate } from "react-router-dom";
 import Auth from "./pages/auth/Auth";
 import Dashboard from "./pages/Dashboard";
 import Layout from "./components/layout/layout";
@@ -12,10 +12,19 @@ import { useDispatch } from "react-redux";
 import { getHotelsNearLocation } from "./app/features/hotel/hotelSlice";
 import HotelRegistrationForm from "./pages/hotel-registration-form";
 import Hotels from "./pages/hotels";
+import ReservationList from "./pages/reservation-list";
+import ProfilePage from './pages/profile';
+import { getUserProfile } from "./app/features/auth/authSlice";
 
 function App() {
   const hostname = window.location.hostname;
   const isDiscover = hostname === "discover.localhost";
+  const navigate = useNavigate();
+
+  const isAuthenticated = () => {
+    const token = localStorage.getItem('access-token');
+    return !!token;
+  };
 
   if (isDiscover) {
     return (
@@ -28,6 +37,13 @@ function App() {
   const dispatch = useDispatch()
   const [location, setLocation] = useState({ latitude: null, longitude: null });
   const [error, setError] = useState(null);
+
+  useEffect(() => {
+    if (isAuthenticated()) {
+      dispatch(getUserProfile());
+    }
+  }, [dispatch]);
+
 
   useEffect(() => {
     if ("geolocation" in navigator) {
@@ -57,9 +73,11 @@ function App() {
         <Route path="/" element={<Dashboard />} />
         <Route path="/auth" element={<Auth />} />
         <Route path="/rooms" element={<Rooms />} />
+        <Route path="/profile" element={<ProfilePage />} />
         <Route path="/hotels" element={<Hotels />} />
         <Route path="/room-details" element={<RoomDetails />} />
         <Route path="/hotels/:id" element={<HotelDetails />} />
+        <Route path="/my-reservation" element={<ReservationList />} />
       </Route>
     </Routes>
   );

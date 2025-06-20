@@ -10,6 +10,9 @@ import Auth from './pages/auth/Auth';
 import { useDispatch } from 'react-redux';
 import { getHotelProfile, getUserProfile } from './app/features/auth/authSlice';
 import { useEffect } from 'react';
+import Categories from './pages/room-category';
+import Subscriptions from './pages/plans';
+import Payments from './pages/payment';
 
 function App() {
   const location = useLocation();
@@ -67,6 +70,10 @@ function App() {
         <Route path="/reservations" element={<Reservations />} />
         <Route path="/reservations/:id" element={<ReservationDetails />} />
         <Route path="/rooms" element={<Rooms />} />
+        <Route path="/payment" element={<Payments />} />
+
+        <Route path="/plans" element={<Subscriptions />} />
+        <Route path="/category" element={<Categories />} />
         <Route path="/guests" element={<Guests />} />
         <Route path="/settings" element={<Settings />} />
       </Route>

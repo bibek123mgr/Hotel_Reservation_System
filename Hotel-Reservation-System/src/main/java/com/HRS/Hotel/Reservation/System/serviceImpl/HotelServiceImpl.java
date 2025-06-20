@@ -3,6 +3,7 @@ package com.HRS.Hotel.Reservation.System.serviceImpl;
 import com.HRS.Hotel.Reservation.System.DAO.*;
 import com.HRS.Hotel.Reservation.System.JWT.JwtService;
 import com.HRS.Hotel.Reservation.System.POJO.*;
+import com.HRS.Hotel.Reservation.System.config.MailService;
 import com.HRS.Hotel.Reservation.System.constant.HotelConstant;
 import com.HRS.Hotel.Reservation.System.enums.PaymentMethod;
 import com.HRS.Hotel.Reservation.System.enums.PaymentStatus;
@@ -36,6 +37,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -91,6 +93,9 @@ public class HotelServiceImpl implements HotelService {
     private String uploadDir;
 
     @Autowired
+    private MailService mailService;
+
+    @Autowired
     private MediaFileDao mediaFileDao;
     @Override
     public ResponseEntity<String> addHotel(HotelCreateRequestWrapper hotelCreateRequestWrapper , MultipartFile imageFile) {
@@ -123,18 +128,14 @@ public class HotelServiceImpl implements HotelService {
                         String paymentUrl = jsonResponse.get("payment_url").asText();
 
                         User user = userDao.save(getUserFromHotelRegisterMap(hotelCreateRequestWrapper));
-//                        Map<String, String> metaData = new HashMap<>();
-//                        metaData.put("ownerType", "hotel");
-//
-//                        MediaFile savedMediaFile = saveMediaFile(imageFile, metaData);
 
-                        Hotel hotel = getHotelFromMap(hotelCreateRequestWrapper, user.getId());
-//                        hotel.setMediaFile(savedMediaFile); // ⬅️ save MediaFile into hotel
-
+                        String filename= saveFileToDisk(imageFile);
+                        Hotel hotel = getHotelFromMap(hotelCreateRequestWrapper, user.getId(),filename);
                         hotelDao.save(hotel);
                         subscriptionPlanPayment.save(
                                 mapDataInSubscriptionPayment(hotel.getId(), subscriptionPlanId, amount, PaymentMethod.KHALTI, pidx,subscriptionDuration, subscriptionType)
                         );
+                        sendHotelWelcomeEmail(user,hotel);
 
                         String responseJson = String.format("{\"message\":\"Hotel Registered!!\", \"payment_url\":\"%s\"}", paymentUrl);
                         return new ResponseEntity<>(responseJson, HttpStatus.CREATED);
@@ -148,6 +149,67 @@ public class HotelServiceImpl implements HotelService {
             logger.error("Error occurred in HotelServiceImpl: {}", e.getMessage(), e);
         }
         return HotelUtils.getResponse(HotelConstant.INTERNAL_SERVER_ERROR, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    private void sendHotelWelcomeEmail(User user, Hotel hotel) {
+        String adminPanelUrl = "https://yourdomain.com/admin/login";
+
+        String subject = "Welcome to Hotel Reservation System - Your Hotel is Now Registered!";
+        String body = "Dear " + user.getFirstName() + " " + user.getLastName() + ",\n\n"
+                + "Congratulations on successfully registering your hotel, " + hotel.getHotelName() + ", with our system!\n\n"
+                + "Here are your hotel details:\n"
+                + "----------------------------------------\n"
+                + "Hotel Name: " + hotel.getHotelName() + "\n"
+                + "Address: " + hotel.getAddress() + "\n"
+                + "City: " + hotel.getCity() + "\n"
+                + "State: " + hotel.getState() + "\n"
+                + "Zip Code: " + hotel.getZipCode() + "\n"
+                + "Check-in Time: " + hotel.getCheckInTime() + "\n"
+                + "Check-out Time: " + hotel.getCheckOutTime() + "\n"
+                + "Hotel Code: " + hotel.getHotelCode() + "\n"
+                + "----------------------------------------\n\n"
+                + "You can now access your hotel admin panel using the following credentials:\n"
+                + "Email: " + user.getEmail() + "\n"
+                + "Hotel Code: " + hotel.getHotelCode() + "\n\n"
+                + "Access your admin panel here: " + adminPanelUrl + "\n\n"
+                + "In your admin panel, you can:\n"
+                + "- Manage room inventory\n"
+                + "- View and confirm reservations\n"
+                + "- Update hotel information\n"
+                + "- Monitor your hotel's performance\n\n"
+                + "If you have any questions or need assistance, please don't hesitate to contact our support team.\n\n"
+                + "Thank you for choosing our platform. We're excited to have you with us!\n\n"
+                + "Best regards,\n"
+                + "Hotel Reservation System Team\n"
+                + "Support: support@yourdomain.com\n"
+                + "Phone: +1 (555) 123-4567";
+
+        mailService.sendMail(user.getEmail(), subject, body);
+    }
+
+    private String saveFileToDisk(MultipartFile file) throws Exception {
+        try {
+            String originalFileName = StringUtils.cleanPath(Objects.requireNonNull(file.getOriginalFilename()));
+            String fileType = originalFileName.contains(".")
+                    ? originalFileName.substring(originalFileName.lastIndexOf("."))
+                    : "";
+            String timeStamp = String.valueOf(System.currentTimeMillis());
+            String fileName = timeStamp + "-" + originalFileName;
+
+            Path uploadPath = Paths.get(uploadDir);
+            if (!Files.exists(uploadPath)) {
+                Files.createDirectories(uploadPath);
+            }
+
+            Path filePath = uploadPath.resolve(fileName);
+            Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+
+            return "/uploads/" + fileName;
+
+        } catch (IOException e) {
+            logger.error("File operation failed", e);
+            throw new Exception("File operation failed", e);
+        }
     }
 
     @Override
@@ -270,6 +332,28 @@ public class HotelServiceImpl implements HotelService {
             hotel.setState(hotelUpdateRequestWrapper.getState());
             hotel.setZipCode(hotelUpdateRequestWrapper.getZipCode());
 
+            hotelDao.save(hotel);
+
+            return HotelUtils.getResponse(HotelConstant.DATA_SUCCESSFULLY_UPDATED, HttpStatus.OK);
+
+        } catch (Exception e) {
+            logger.error("Error occurred in updateHotelProfile: {}", e.getMessage(), e);
+            return HotelUtils.getResponse(HotelConstant.INTERNAL_SERVER_ERROR, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+
+    @Override
+    public ResponseEntity<String> updateHotelProfileImage(MultipartFile imageFile,Integer id) {
+        try {
+            Optional<Hotel> optionalHotel = hotelDao.findById(id);
+
+            if (optionalHotel.isEmpty()) {
+                return HotelUtils.getResponse("Hotel not found", HttpStatus.NOT_FOUND);
+            }
+            Hotel hotel = optionalHotel.get();
+            String filename= saveFileToDisk(imageFile);
+            hotel.setImageUrl(filename);
             hotelDao.save(hotel);
 
             return HotelUtils.getResponse(HotelConstant.DATA_SUCCESSFULLY_UPDATED, HttpStatus.OK);
@@ -459,7 +543,7 @@ public class HotelServiceImpl implements HotelService {
     }
 
 
-    private Hotel getHotelFromMap(HotelCreateRequestWrapper request, Integer ownerId) {
+    private Hotel getHotelFromMap(HotelCreateRequestWrapper request, Integer ownerId,String imageUrl) {
         Hotel hotel = new Hotel();
         hotel.setHotelName(request.getHotelName());
         hotel.setHotelCode(generateHotelCode());
@@ -473,6 +557,7 @@ public class HotelServiceImpl implements HotelService {
         hotel.setLongitude(request.getLongitude());
         hotel.setLatitude(request.getLatitude());
         hotel.setCheckInTime(request.getCheckInTime());
+        hotel.setImageUrl(imageUrl);
         hotel.setCheckOutTime(request.getCheckOutTime());
         hotel.setStatus(true);
         return hotel;

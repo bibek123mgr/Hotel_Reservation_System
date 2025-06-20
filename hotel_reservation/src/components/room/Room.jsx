@@ -194,29 +194,9 @@ export default function Room() {
                                     <span className="inline-flex items-center bg-gray-100 rounded-full px-2 py-0.5 text-xs text-gray-700">
                                         👥 {room.capacity}
                                     </span>
-                                    {/* <span className="inline-flex items-center bg-gray-100 rounded-full px-2 py-0.5 text-xs text-gray-700">
-                                        🛏️ {room.bedType.split(' ')[0]} 
-                                    </span>
-                                    <span className="inline-flex items-center bg-gray-100 rounded-full px-2 py-0.5 text-xs text-gray-700">
-                                        📏 {room.size}
-                                    </span> */}
+
                                 </div>
-                                {/* <div className="flex justify-between items-center"> */}
-                                {/* <div className="flex space-x-1">
-                                        {room.amenities.slice(0, 3).map(amenity => (
-                                            <span key={amenity} className="text-gray-500 text-sm" title={amenity}>
-                                                {amenity === "wifi" && "📶"}
-                                                {amenity === "tv" && "📺"}
-                                                {amenity === "breakfast" && "🍳"}
-                                                {amenity === "balcony" && "🌞"}
-                                                {amenity === "minibar" && "🍷"}
-                                            </span>
-                                        ))}
-                                    </div> */}
-                                {/* <Link to={`/rooms/${room.id}`} className="text-blue-600 hover:text-blue-800 font-medium text-xs cursor-pointer">
-                                        Reserve →
-                                    </Link>
-                                </div> */}
+
                             </div>
                         </Link>
                     ))}

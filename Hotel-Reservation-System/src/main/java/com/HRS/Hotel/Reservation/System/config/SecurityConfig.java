@@ -34,7 +34,7 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(request -> request
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers( "/api/v1/public-comment","/api/v1/auth/signin-admin","/api/v1/auth/verify-registration-khalti","/api/v1/subscription-plans","/api/v1/hotels/near-me","/api/v1/rooms/public-room-details","/api/v1/rooms/public","/uploads/**","/api/v1/auth/allactivehotels", "/api/v1/auth/hotel-signin","/api/v1/auth/signup", "/api/v1/auth/signin","/api/v1/auth/verify-otp", "/api/v1/auth/forgot-password","/api/v1/auth/hotel-registration").permitAll()
+                        .requestMatchers( "/api/v1/hotels","/api/v1/public-comment","/api/v1/auth/signin-admin","/api/v1/auth/verify-registration-khalti","/api/v1/subscription-plans","/api/v1/hotels/near-me","/api/v1/rooms/public-room-details","/api/v1/rooms/public","/api/v1/rooms/public/**","/uploads/**","/api/v1/auth/allactivehotels", "/api/v1/auth/hotel-signin","/api/v1/auth/signup", "/api/v1/auth/signin","/api/v1/auth/verify-otp", "/api/v1/auth/forgot-password","/api/v1/auth/hotel-registration","/uploads/**").permitAll()
                         .anyRequest().authenticated())
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

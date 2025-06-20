@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.ArrayList;
@@ -36,9 +37,10 @@ public class CommentRestImpl implements CommentRest {
     }
 
     @Override
-    public ResponseEntity<List<CommentResponseWrapper>> getCommentForPublic(GetCommentRequestWrapper getCommentRequestWrapper) {
+    public ResponseEntity<List<CommentResponseWrapper>> getCommentForPublic(Integer hotelId,
+                                                                            Integer roomCategoryId) {
         try{
-            return commentService.getCommentForPublic(getCommentRequestWrapper);
+            return commentService.getCommentForPublic(hotelId,roomCategoryId);
         } catch (Exception e) {
             logger.error("Error occured at CommentRestImpl:{}",e.getMessage(),e);
         }

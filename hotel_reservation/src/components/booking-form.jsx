@@ -23,7 +23,7 @@ const bookingSchema = z.object({
 
 
 export default function BookingForm({ hotelId,
-    roomCategoryId }) {
+    roomCategoryId, isAvaiableRoom }) {
     const today = new Date();
     const tomorrow = new Date(today);
     tomorrow.setDate(today.getDate() + 1);
@@ -69,12 +69,8 @@ export default function BookingForm({ hotelId,
         const resultAction = await dispatch(createReservation({
             hotelId: hotelId,
             roomCategoryId: roomCategoryId,
-            roomId: 1,
-            bookedBy: 1,
-            createdBy: 1,
             paymentMethod: formData.paymentMethod.toUpperCase(),
             reservationStatus: 'PENDING',
-            price: 150.00,
             checkInDate: formData.checkIn.toISOString(),
             checkOutDate: formData.checkOut.toISOString(),
             numberOfGuests: parseInt(formData.number_of_guest, 10),
@@ -191,7 +187,10 @@ export default function BookingForm({ hotelId,
                     <div className="space-y-4">
                         <button
                             type="submit"
-                            className="w-full bg-gradient-to-r from-blue-600 to-blue-800 hover:from-blue-700 hover:to-blue-900 text-white py-3 px-4 rounded-lg font-semibold text-lg shadow-md hover:shadow-lg transition-all duration-300 flex items-center justify-center"
+                            className={`w-full bg-gradient-to-r from-blue-600 to-blue-800 text-white py-3 px-4 rounded-lg font-semibold text-lg shadow-md transition-all duration-300 flex items-center justify-center ${isAvaiableRoom
+                                ? 'hover:from-blue-700 hover:to-blue-900 hover:shadow-lg'
+                                : 'opacity-50 cursor-not-allowed'
+                                }`}
                         >
                             Reserve Now
                         </button>

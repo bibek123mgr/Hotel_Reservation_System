@@ -74,13 +74,13 @@ const Reservations = () => {
                     <h1 className="text-2xl font-semibold text-gray-900">Reservations</h1>
                     <p className="mt-1 text-sm text-gray-500">Manage all guest reservations</p>
                 </div>
-                <button
+                {/* <button
                     className="mt-4 sm:mt-0 inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700"
                     onClick={() => setShowNewReservationDialog(true)}
                 >
                     <Plus className="mr-2 h-4 w-4" />
                     New Reservation
-                </button>
+                </button> */}
             </div>
 
             {/* Reservation Dialog UI skipped for brevity */}

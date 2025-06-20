@@ -27,6 +27,8 @@ public class ReservationResponseWrapper {
     private LocalDateTime checkInDate;
     private LocalDateTime checkOutDate;
     private LocalDateTime createdAt;
+    private Boolean review;
+
 
     public ReservationResponseWrapper(
             Integer id,
@@ -44,7 +46,9 @@ public class ReservationResponseWrapper {
             Integer numberOfGuests,
             LocalDateTime checkInDate,
             LocalDateTime checkOutDate,
-            LocalDateTime createdAt) {
+            LocalDateTime createdAt,
+            Boolean review
+            ) {
         this.id = id;
         this.userId = userId;
         this.userName = userName;
@@ -61,6 +65,7 @@ public class ReservationResponseWrapper {
         this.checkInDate = checkInDate;
         this.checkOutDate = checkOutDate;
         this.createdAt = createdAt;
+        this.review=review;
     }
 
 }

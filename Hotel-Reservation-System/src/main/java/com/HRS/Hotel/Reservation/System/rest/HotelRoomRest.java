@@ -18,8 +18,12 @@ public interface HotelRoomRest {
     public ResponseEntity<String> addHotelRoom( @RequestPart("roomRequestWrapper") RoomRequestWrapper roomRequestWrapper,
                                                 @RequestPart("file") MultipartFile file);
 
-    @PatchMapping("/{roomId}")
-    public ResponseEntity<String> updateHotelRoom(@RequestBody(required = true)RoomRequestWrapper roomRequestWrapper,@PathVariable Integer roomId);
+    @PatchMapping(value = "/{roomId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<String> updateHotelRoom(
+            @RequestPart("roomRequestWrapper") RoomRequestWrapper roomRequestWrapper,
+            @RequestPart(value = "file", required = false) MultipartFile file,
+            @PathVariable Integer roomId
+    );
 
     @GetMapping("/{roomCategoryId}")
     public ResponseEntity<List<RoomResponseWrapper>> getAllSpecificHotelRoom(@PathVariable Integer roomCategoryId);
@@ -29,6 +33,9 @@ public interface HotelRoomRest {
 
     @GetMapping("/public")
     public ResponseEntity<List<RoomResponseWrapper>> getAllHotelRoomForPublic();
+
+    @GetMapping("/public/{hotelId}")
+    public ResponseEntity<List<RoomResponseWrapper>> getAllSpecificHotelRoomForPublic(@PathVariable Integer hotelId);
 
     @GetMapping("/public-room-details")
     public ResponseEntity<RoomResponseWrapper> getHotelRoomDetailForPublic(@RequestParam Integer hotelId,

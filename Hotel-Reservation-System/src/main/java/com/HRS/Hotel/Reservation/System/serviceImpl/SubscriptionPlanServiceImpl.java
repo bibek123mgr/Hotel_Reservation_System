@@ -3,12 +3,16 @@ package com.HRS.Hotel.Reservation.System.serviceImpl;
 import com.HRS.Hotel.Reservation.System.DAO.SubscriptionPlanDao;
 import com.HRS.Hotel.Reservation.System.POJO.SubscriptionPlan;
 import com.HRS.Hotel.Reservation.System.POJO.User;
+import com.HRS.Hotel.Reservation.System.POJO.UserPrincipal;
 import com.HRS.Hotel.Reservation.System.constant.HotelConstant;
 import com.HRS.Hotel.Reservation.System.service.SubscriptionPlanService;
 import com.HRS.Hotel.Reservation.System.utils.HotelUtils;
+import com.HRS.Hotel.Reservation.System.wrapper.CreateSubscriptionWrapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,12 +29,20 @@ public class SubscriptionPlanServiceImpl implements SubscriptionPlanService {
     private SubscriptionPlanDao subscriptionPlanDao;
 
     @Override
-    public ResponseEntity<String> addSubscriptionPlan(Map<String, String> requestMap) {
+    public ResponseEntity<String> addSubscriptionPlan(CreateSubscriptionWrapper requestMap) {
         try{
            if(validateAddSubscriptionPlanMap(requestMap)){
-               com.HRS.Hotel.Reservation.System.POJO.SubscriptionPlan subscriptionPlan=subscriptionPlanDao.findBySubscriptionPlanName(requestMap.get("name"));
+               Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+               if (authentication == null || !authentication.isAuthenticated()) {
+                   return HotelUtils.getResponse("Unauthorized access", HttpStatus.UNAUTHORIZED);
+               }
+               System.out.println("i am auth"+authentication.getPrincipal() );
+               UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
+
+               Integer userId = userPrincipal.getId();
+               com.HRS.Hotel.Reservation.System.POJO.SubscriptionPlan subscriptionPlan=subscriptionPlanDao.findBySubscriptionPlanName(requestMap.getName());
                if(Objects.isNull(subscriptionPlan)){
-                   subscriptionPlanDao.save(getSubscriptionPlanFromMap(requestMap));
+                   subscriptionPlanDao.save(getSubscriptionPlanFromMap(requestMap,userId));
                    return HotelUtils.getResponse(HotelConstant.DATA_SUCCESSFULLY_SAVED,HttpStatus.CREATED);
                }else{
                    return HotelUtils.getResponse(HotelConstant.INVALID_DATA,HttpStatus.BAD_REQUEST);
@@ -44,49 +56,68 @@ public class SubscriptionPlanServiceImpl implements SubscriptionPlanService {
         return HotelUtils.getResponse(HotelConstant.INTERNAL_SERVER_ERROR, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
-    private com.HRS.Hotel.Reservation.System.POJO.SubscriptionPlan getSubscriptionPlanFromMap(Map<String,String> requestMap){
+    private com.HRS.Hotel.Reservation.System.POJO.SubscriptionPlan getSubscriptionPlanFromMap(CreateSubscriptionWrapper requestMap,Integer userId){
         com.HRS.Hotel.Reservation.System.POJO.SubscriptionPlan subscriptionPlan=new com.HRS.Hotel.Reservation.System.POJO.SubscriptionPlan();
-        subscriptionPlan.setName(requestMap.get("name"));
-        subscriptionPlan.setFeatures(requestMap.get("features"));
-        subscriptionPlan.setDescription(requestMap.get("description"));
+        subscriptionPlan.setName(requestMap.getName());
+        subscriptionPlan.setFeatures(requestMap.getFeatures());
+        subscriptionPlan.setDescription(requestMap.getDescription());
 
-        subscriptionPlan.setMonthlyPrice(Double.parseDouble(requestMap.get("monthlyPrice")));
-        subscriptionPlan.setYearlyPrice(Double.parseDouble(requestMap.get("yearlyPrice")));
-
-        subscriptionPlan.setMonthlyOfferPercentage(Double.parseDouble(requestMap.getOrDefault("monthlyOfferPercentage", "0")));
-        subscriptionPlan.setYearlyOfferPercentage(Double.parseDouble(requestMap.getOrDefault("yearlyOfferPercentage", "0")));
-
-        subscriptionPlan.setDiscountedMonthlyPrice(Double.parseDouble(requestMap.getOrDefault("discountedMonthlyPrice", "0")));
-        subscriptionPlan.setDiscountedYearlyPrice(Double.parseDouble(requestMap.getOrDefault("discountedYearlyPrice", "0")));
+        subscriptionPlan.setMonthlyPrice(requestMap.getMonthlyPrice());
+        subscriptionPlan.setYearlyPrice(requestMap.getYearlyPrice());
 
         User user = new User();
-        user.setId(Integer.parseInt(requestMap.get("createdBy")));
+        user.setId(userId);
         subscriptionPlan.setCreatedBy(user);
 
-        Boolean status = Boolean.parseBoolean(requestMap.getOrDefault("status", "true"));
-        subscriptionPlan.setStatus(status);
+        subscriptionPlan.setStatus(true);
 
         return subscriptionPlan;
     }
 
-    private boolean validateAddSubscriptionPlanMap(Map<String,String> requestMap){
-        return requestMap.containsKey("name")
-                && requestMap.containsKey("features")
-                && requestMap.containsKey("description")
-                && requestMap.containsKey("monthlyPrice")
-                && requestMap.containsKey("createdBy")
-                && requestMap.containsKey("yearlyPrice");
+    private boolean validateAddSubscriptionPlanMap(CreateSubscriptionWrapper requestMap) {
+        return requestMap.getName() != null && !requestMap.getName().trim().isEmpty()
+                && requestMap.getFeatures() != null && !requestMap.getFeatures().isEmpty()
+                && requestMap.getDescription() != null && !requestMap.getDescription().trim().isEmpty()
+                && requestMap.getMonthlyPrice() != null
+                && requestMap.getYearlyPrice() != null;
     }
-
     @Override
-    public ResponseEntity<String> updateSubscriptionPlan(Map<String, String> requestMap) {
+    public ResponseEntity<String> updateSubscriptionPlan(CreateSubscriptionWrapper requestMap) {
         try{
-            subscriptionPlanDao.save(getSubscriptionPlanFromMap(requestMap));
-            return HotelUtils.getResponse(HotelConstant.DATA_SUCCESSFULLY_UPDATED,HttpStatus.OK);
+            if(validateUpdateSubscriptionPlanMap(requestMap)) {
+                Optional<SubscriptionPlan> subscriptionPlan=subscriptionPlanDao.findById(requestMap.getId());
+                if(subscriptionPlan.isPresent()){
+                    subscriptionPlanDao.save(mapSubscriptionPlanFromMap(requestMap,subscriptionPlan.get()));
+                return HotelUtils.getResponse(HotelConstant.DATA_SUCCESSFULLY_UPDATED, HttpStatus.OK);
+                }else{
+                    return HotelUtils.getResponse(HotelConstant.INVALID_DATA,HttpStatus.BAD_REQUEST);
+                }
+            }else {
+                return HotelUtils.getResponse(HotelConstant.INVALID_DATA,HttpStatus.BAD_REQUEST);
+            }
         } catch (Exception e) {
             logger.error("Error occurred in SubscriptionPlanServiceImpl :{}",e.getMessage(),e);
         }
         return HotelUtils.getResponse(HotelConstant.INTERNAL_SERVER_ERROR,HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+
+    private SubscriptionPlan mapSubscriptionPlanFromMap(CreateSubscriptionWrapper requestMap,SubscriptionPlan subscriptionPlan){
+        subscriptionPlan.setName(requestMap.getName());
+        subscriptionPlan.setFeatures(requestMap.getFeatures());
+        subscriptionPlan.setDescription(requestMap.getDescription());
+        subscriptionPlan.setMonthlyPrice(requestMap.getMonthlyPrice());
+        subscriptionPlan.setYearlyPrice(requestMap.getYearlyPrice());
+        return subscriptionPlan;
+    }
+
+
+    private boolean validateUpdateSubscriptionPlanMap(CreateSubscriptionWrapper requestMap) {
+        return  requestMap.getId() != null &&requestMap.getName() != null && !requestMap.getName().trim().isEmpty()
+                && requestMap.getFeatures() != null && !requestMap.getFeatures().isEmpty()
+                && requestMap.getDescription() != null && !requestMap.getDescription().trim().isEmpty()
+                && requestMap.getMonthlyPrice() != null
+                && requestMap.getYearlyPrice() != null;
     }
 
     @Override
@@ -96,6 +127,7 @@ public class SubscriptionPlanServiceImpl implements SubscriptionPlanService {
             if(subscriptionPlan.isPresent()){
                 SubscriptionPlan plan=subscriptionPlan.get();
                 plan.setStatus(false);
+                subscriptionPlanDao.save(plan);
                 return HotelUtils.getResponse(HotelConstant.DATA_SUCCESSFULLY_DELETED,HttpStatus.OK);
             }else{
                 return HotelUtils.getResponse(HotelConstant.INVALID_DATA,HttpStatus.BAD_REQUEST);
@@ -107,9 +139,9 @@ public class SubscriptionPlanServiceImpl implements SubscriptionPlanService {
     }
 
     @Override
-    public ResponseEntity<List<SubscriptionPlan>> fetchSubscriptionPlan() {
+    public ResponseEntity<List<CreateSubscriptionWrapper>> fetchSubscriptionPlan() {
         try{
-            List<SubscriptionPlan> subscriptionPlan=subscriptionPlanDao.findAll();
+            List<CreateSubscriptionWrapper> subscriptionPlan=subscriptionPlanDao.getAllActiveSubscriptionPlans();
             return new ResponseEntity<>(subscriptionPlan,HttpStatus.OK);
         } catch (Exception e) {
             logger.error("Error occurred in SubscriptionPlanServiceImpl :{}",e.getMessage(),e);
@@ -117,8 +149,4 @@ public class SubscriptionPlanServiceImpl implements SubscriptionPlanService {
         return new ResponseEntity<>(new ArrayList<>(),HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
-//    @Override
-//    public ResponseEntity<String> getAllSubscriptionPlan() {
-//        return null;
-//    }
 }

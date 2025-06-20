@@ -25,12 +25,13 @@ public class RoomResponseWrapper {
     private Boolean status;
     private LocalDateTime createdAt;
     private Long roomCount;
+    private String imageUrl;
 
 
     public RoomResponseWrapper(Integer id, Integer hotelId, String hotelName,
                                String roomNumber, String roomTitle, Integer roomCategoryId, String roomCategory,
                                Integer floor, Integer capacity, Double price, String description,
-                               RoomStatus roomStatus, Boolean status, LocalDateTime createdAt) {
+                               RoomStatus roomStatus, Boolean status, LocalDateTime createdAt,String imageUrl) {
         this.id = id;
         this.hotelId = hotelId;
         this.hotelName = hotelName;
@@ -45,12 +46,13 @@ public class RoomResponseWrapper {
         this.roomStatus = roomStatus;
         this.status = status;
         this.createdAt = createdAt;
+        this.imageUrl="http://localhost:8080"+imageUrl;
     }
 
     public RoomResponseWrapper(Integer id, Integer hotelId, String hotelName,
                                String roomNumber, String roomTitle, Integer roomCategoryId, String roomCategory,
                                Integer floor, Integer capacity, Double price, String description,
-                               RoomStatus roomStatus, Boolean status, LocalDateTime createdAt, Long roomCount) {
+                               RoomStatus roomStatus, Boolean status, LocalDateTime createdAt, Long roomCount,String imageUrl) {
         this.id = id;
         this.hotelId = hotelId;
         this.hotelName = hotelName;
@@ -66,6 +68,8 @@ public class RoomResponseWrapper {
         this.status = status;
         this.createdAt = createdAt;
         this.roomCount = roomCount;
+        this.imageUrl="http://localhost:8080"+imageUrl;
+
     }
 
 }

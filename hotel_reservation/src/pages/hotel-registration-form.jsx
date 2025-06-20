@@ -65,7 +65,7 @@ const HotelRegistrationForm = () => {
         formState: { errors, isSubmitting, isValid },
         reset
     } = useForm({
-        mode: 'onChange',
+        mode: 'onSubmit',
         defaultValues: {
             firstName: '', lastName: '', email: '', password: '',
             subscriptionType: 'monthly', subscriptionDuration: 6,
@@ -81,7 +81,7 @@ const HotelRegistrationForm = () => {
 
         try {
             const formData = new FormData();
-            formData.append('image', file);
+            formData.append('imageFile', file);
 
             const payload = {
                 ...data,
@@ -89,6 +89,7 @@ const HotelRegistrationForm = () => {
                 monthlyPrice,
                 yearlyPrice
             };
+
 
             const hotelDataBlob = new Blob([JSON.stringify(payload)], {
                 type: 'application/json'
@@ -248,7 +249,7 @@ const HotelRegistrationForm = () => {
                     {/* Submit */}
                     <button
                         type="submit"
-                        disabled={isSubmitting || !isValid}
+                        disabled={isSubmitting}
                         className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold py-3 px-8 rounded-xl transition-all"
                     >
                         {isSubmitting ? 'Registering...' : 'Register Hotel'}

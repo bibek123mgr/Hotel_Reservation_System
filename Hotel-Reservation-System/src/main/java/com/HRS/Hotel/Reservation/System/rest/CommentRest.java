@@ -15,7 +15,8 @@ public interface CommentRest {
     public ResponseEntity<String> createComment(@RequestBody CreateCommentRequestWrapper createCommentRequestWrapper);
 
     @GetMapping("/public-comment")
-    public ResponseEntity<List<CommentResponseWrapper>> getCommentForPublic(@RequestBody GetCommentRequestWrapper getCommentRequestWrapper);
+    public ResponseEntity<List<CommentResponseWrapper>> getCommentForPublic(@RequestParam Integer hotelId,
+                                                                            @RequestParam Integer roomCategoryId);
 
     @GetMapping("/comment/{id}")
     public ResponseEntity<List<CommentResponseWrapper>> getCommentForHotelAdmin(@PathVariable Integer id);

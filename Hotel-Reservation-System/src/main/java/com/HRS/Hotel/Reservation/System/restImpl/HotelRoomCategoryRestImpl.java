@@ -3,6 +3,7 @@ package com.HRS.Hotel.Reservation.System.restImpl;
 import com.HRS.Hotel.Reservation.System.constant.HotelConstant;
 import com.HRS.Hotel.Reservation.System.rest.HotelRoomCategoryRest;
 import com.HRS.Hotel.Reservation.System.utils.HotelUtils;
+import com.HRS.Hotel.Reservation.System.wrapper.CreateCategoryWrapper;
 import com.HRS.Hotel.Reservation.System.wrapper.HotelRoomCategoryWrapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,7 +26,7 @@ public class HotelRoomCategoryRestImpl implements HotelRoomCategoryRest {
     private HotelRoomCategoryService hotelRoomCategoryService;
 
     @Override
-    public ResponseEntity<String> addHotelRoomsCategory(Map<String, String> requestMap) {
+    public ResponseEntity<String> addHotelRoomsCategory(CreateCategoryWrapper requestMap) {
         try{
             return hotelRoomCategoryService.addHotelRoomsCategory(requestMap);
         } catch (Exception e) {
@@ -45,7 +46,7 @@ public class HotelRoomCategoryRestImpl implements HotelRoomCategoryRest {
     }
 
     @Override
-    public ResponseEntity<String> updateHotelRoomsCategory(Map<String, String> requestMap) {
+    public ResponseEntity<String> updateHotelRoomsCategory(CreateCategoryWrapper requestMap) {
         try{
             return hotelRoomCategoryService.updateHotelRoomsCategory(requestMap);
         } catch (Exception e) {

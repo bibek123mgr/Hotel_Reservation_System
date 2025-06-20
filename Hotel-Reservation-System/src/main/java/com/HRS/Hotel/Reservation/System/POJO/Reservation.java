@@ -47,7 +47,8 @@ import java.time.LocalDateTime;
                         "r.numberOfGuests, " +
                         "r.checkInDate, " +
                         "r.checkOutDate, " +
-                        "r.createdAt) " +
+                        "r.createdAt," +
+                        "r.review) " +
                         "FROM Reservation r " +
                         "WHERE r.bookedBy.id = :userId"
         ),
@@ -69,7 +70,8 @@ import java.time.LocalDateTime;
                         "r.numberOfGuests, " +
                         "r.checkInDate, " +
                         "r.checkOutDate, " +
-                        "r.createdAt) " +
+                        "r.createdAt," +
+                        "r.review) " +
                         "FROM Reservation r"
         ), @NamedQuery(
         name = "ReservationDao.getReservation",
@@ -89,7 +91,8 @@ import java.time.LocalDateTime;
                 "r.numberOfGuests, " +
                 "r.checkInDate, " +
                 "r.checkOutDate, " +
-                "r.createdAt) " +
+                "r.createdAt," +
+                "r.review) " +
                 "FROM Reservation r WHERE id=:id"
 ),
         @NamedQuery(
@@ -110,7 +113,8 @@ import java.time.LocalDateTime;
                         "r.numberOfGuests, " +
                         "r.checkInDate, " +
                         "r.checkOutDate, " +
-                        "r.createdAt) " +
+                        "r.createdAt," +
+                        "r.review) " +
                         "FROM Reservation r " +
                         "WHERE r.hotel.id = :hotelId"
         ),
@@ -217,6 +221,9 @@ public class Reservation implements Serializable {
 
     @Column(nullable = false)
     private boolean status = true;
+
+    @Column(nullable = false)
+    private boolean review = false;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "payment_id", nullable = false, foreignKey = @ForeignKey(name = "FK_reservation_payment_id"))

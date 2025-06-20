@@ -51,6 +51,16 @@ public class HotelRestImpl implements HotelRest {
         return HotelUtils.getResponse(HotelConstant.INTERNAL_SERVER_ERROR, HttpStatus.INTERNAL_SERVER_ERROR);    }
 
     @Override
+    public ResponseEntity<String> updateHotelProfileImage(MultipartFile imageFile,Integer id) {
+        try{
+            return hotelService.updateHotelProfileImage(imageFile,id);
+        }catch (Exception e){
+            logger.error("Error occurred in HotelRestImpl {}",e.getMessage(),e);
+        }
+        return HotelUtils.getResponse(HotelConstant.INTERNAL_SERVER_ERROR, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    @Override
     public ResponseEntity<String> signIn(HotelSignInRequestWrapper hotelSignInRequestWrapper, HttpServletResponse response) {
         try{
             return hotelService.signIn(hotelSignInRequestWrapper,response);

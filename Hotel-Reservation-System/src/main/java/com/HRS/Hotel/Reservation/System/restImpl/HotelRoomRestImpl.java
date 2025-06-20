@@ -39,9 +39,9 @@ public class HotelRoomRestImpl implements HotelRoomRest {
     }
 
     @Override
-    public ResponseEntity<String> updateHotelRoom(RoomRequestWrapper roomRequestWrapper, Integer roomId) {
+    public ResponseEntity<String> updateHotelRoom(RoomRequestWrapper roomRequestWrapper,MultipartFile file, Integer roomId) {
         try {
-            return hotelRoomService.updateHotelRoom(roomRequestWrapper,roomId);
+            return hotelRoomService.updateHotelRoom(roomRequestWrapper,file,roomId);
         } catch (Exception e) {
             logger.error("Error occurred at HotelRoomRestImpl {}",e.getMessage(),e);
         }
@@ -72,6 +72,16 @@ public class HotelRoomRestImpl implements HotelRoomRest {
     public ResponseEntity<List<RoomResponseWrapper>> getAllHotelRoomForPublic() {
         try {
             return hotelRoomService.getAllHotelRoomForPublic();
+        } catch (Exception e) {
+            logger.error("Error occurred at HotelRoomRestImpl {}",e.getMessage(),e);
+        }
+        return new ResponseEntity<>(new ArrayList<>(), HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    @Override
+    public ResponseEntity<List<RoomResponseWrapper>> getAllSpecificHotelRoomForPublic(Integer hotelId) {
+        try {
+            return hotelRoomService.getAllSpecificHotelRoomForPublic(hotelId);
         } catch (Exception e) {
             logger.error("Error occurred at HotelRoomRestImpl {}",e.getMessage(),e);
         }

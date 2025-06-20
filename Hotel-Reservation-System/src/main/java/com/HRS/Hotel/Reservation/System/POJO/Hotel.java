@@ -31,7 +31,7 @@ import java.time.LocalDateTime;
 @NamedQuery(
         name = "HotelDao.findAvailableHotelsWithFilters",
         query = "SELECT NEW com.HRS.Hotel.Reservation.System.wrapper.HotelListWrapper(" +
-                "h.id, h.hotelName, h.description, h.address, h.checkInTime, h.checkOutTime) " +
+                "h.id, h.hotelName, h.description, h.address,h.imageUrl, h.checkInTime, h.checkOutTime) " +
                 "FROM Hotel h WHERE h.status = true"
 )
 
@@ -40,7 +40,7 @@ import java.time.LocalDateTime;
 @NamedQuery(
         name = "HotelDao.findAvailableHotelsNearByWithFilters",
         query = "SELECT NEW com.HRS.Hotel.Reservation.System.wrapper.HotelListWrapper(" +
-                "h.id, h.hotelName, h.description, h.address, h.checkInTime, h.checkOutTime) " +
+                "h.id, h.hotelName, h.description, h.address,h.imageUrl, h.checkInTime, h.checkOutTime) " +
                 "FROM Hotel h " +
                 "WHERE (6371 * acos( cos(radians(:latitude)) * cos(radians(h.latitude)) * " +
                 "cos(radians(h.longitude) - radians(:longitude)) + sin(radians(:latitude)) * sin(radians(h.latitude)) )) < :radius " +
@@ -71,9 +71,8 @@ public class Hotel implements Serializable {
 
     private Boolean status=true;
 
-    @JoinColumn(name = "image-url")
-    @ManyToOne(fetch = FetchType.LAZY)
-    private MediaFile mediaFile;
+
+    private String imageUrl;
 
     @CreatedDate
     private LocalDateTime createdAt;

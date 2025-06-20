@@ -29,4 +29,6 @@ public interface HotelService {
     ResponseEntity<PaymentSummeryResponse> getPaymentSummery();
 
     ResponseEntity<String> updateHotelProfile(HotelUpdateRequestWrapper hotelUpdateRequestWrapper);
+
+    ResponseEntity<String> updateHotelProfileImage(MultipartFile imageFile, Integer id);
 }

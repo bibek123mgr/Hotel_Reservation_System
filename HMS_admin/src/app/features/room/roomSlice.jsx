@@ -26,6 +26,33 @@ export const createRoom = createAsyncThunk(
 );
 
 
+export const updateRoom = createAsyncThunk(
+    'rooms/createRoom',
+    async (payload, { rejectWithValue }) => {
+        const { roomId, data: formData } = payload;
+
+
+        try {
+            const { data } = await AUTHAPI.patch(`/v1/rooms/${roomId}`, formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
+            });
+            return data;
+        } catch (error) {
+            console.log('Status:', error.response?.status);
+
+            if (error.response?.status === 401) {
+                dispatch(logout());
+            }
+            return rejectWithValue(
+                error.response?.data?.message || 'Failed to create room'
+            );
+        }
+    }
+)
+
+
 export const getAllRooms = createAsyncThunk(
     'rooms/getAllRooms',
     async (_, { rejectWithValue }) => {

@@ -12,23 +12,14 @@ import java.util.List;
 @NoArgsConstructor
 public class HotelRoomCategoryWrapper {
     private Integer id;
-    private String imageUrl;
     private String description;
     private String roomCategoryType;
 
-    public HotelRoomCategoryWrapper(Integer id, String imageUrl, String description, String roomCategoryType) {
+    public HotelRoomCategoryWrapper(Integer id, String description, String roomCategoryType) {
         this.id = id;
-        setImageUrl(imageUrl);
-        this.description = description;
+       this.description = description;
         this.roomCategoryType = roomCategoryType;
 
-    }
-
-    public void setImageUrl(String imageUrl) {
-        this.imageUrl = ServletUriComponentsBuilder.fromCurrentContextPath()
-                .path("/")
-                .path(imageUrl.startsWith("/") ? imageUrl.substring(1) : imageUrl)
-                .toUriString();
     }
 
 }

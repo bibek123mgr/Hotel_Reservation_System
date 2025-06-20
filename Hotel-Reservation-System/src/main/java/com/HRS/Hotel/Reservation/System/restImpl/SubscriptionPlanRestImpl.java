@@ -5,6 +5,7 @@ import com.HRS.Hotel.Reservation.System.constant.HotelConstant;
 import com.HRS.Hotel.Reservation.System.rest.SubscriptionPlanRest;
 import com.HRS.Hotel.Reservation.System.service.SubscriptionPlanService;
 import com.HRS.Hotel.Reservation.System.utils.HotelUtils;
+import com.HRS.Hotel.Reservation.System.wrapper.CreateSubscriptionWrapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,7 +26,7 @@ public class SubscriptionPlanRestImpl implements SubscriptionPlanRest {
    private SubscriptionPlanService subscriptionPlanService;
 
     @Override
-    public ResponseEntity<String> addSubscriptionPlan(Map<String, String> requestMap) {
+    public ResponseEntity<String> addSubscriptionPlan(CreateSubscriptionWrapper requestMap) {
         try{
             return subscriptionPlanService.addSubscriptionPlan(requestMap);
         } catch (Exception e) {
@@ -35,7 +36,7 @@ public class SubscriptionPlanRestImpl implements SubscriptionPlanRest {
     }
 
     @Override
-    public ResponseEntity<String> updateSubscriptionPlan(Map<String, String> requestMap) {
+    public ResponseEntity<String> updateSubscriptionPlan(CreateSubscriptionWrapper requestMap) {
         try{
             return subscriptionPlanService.updateSubscriptionPlan(requestMap);
         } catch (Exception e) {
@@ -45,7 +46,7 @@ public class SubscriptionPlanRestImpl implements SubscriptionPlanRest {
     }
 
     @Override
-    public ResponseEntity<List<SubscriptionPlan>> fetchSubscriptionPlan() {
+    public ResponseEntity<List<CreateSubscriptionWrapper>> fetchSubscriptionPlan() {
         try{
             return subscriptionPlanService.fetchSubscriptionPlan();
         } catch (Exception e) {

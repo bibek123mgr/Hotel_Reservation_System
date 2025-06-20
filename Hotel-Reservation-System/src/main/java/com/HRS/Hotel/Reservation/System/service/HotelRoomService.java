@@ -12,7 +12,7 @@ import java.util.List;
 public interface HotelRoomService {
     ResponseEntity<String> addHotelRoom(RoomRequestWrapper roomRequestWrapper, MultipartFile file);
 
-    ResponseEntity<String> updateHotelRoom(RoomRequestWrapper roomRequestWrapper, Integer roomId);
+    ResponseEntity<String> updateHotelRoom(RoomRequestWrapper roomRequestWrapper, MultipartFile file,Integer roomId);
 
     ResponseEntity<List<RoomResponseWrapper>> getAllSpecificHotelRoom(Integer roomCategoryId);
 
@@ -25,4 +25,6 @@ public interface HotelRoomService {
     ResponseEntity<RoomResponseWrapper> getHotelRoomDetailForPublic(Integer hotelId, Integer roomCategoryId);
 
     ResponseEntity<String> updateHotelRoomStatus(Integer roomId, RoomStatus roomStatus);
+
+    ResponseEntity<List<RoomResponseWrapper>> getAllSpecificHotelRoomForPublic(Integer hotelId);
 }

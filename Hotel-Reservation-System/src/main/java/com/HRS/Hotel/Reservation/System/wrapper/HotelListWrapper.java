@@ -10,17 +10,17 @@ public class HotelListWrapper {
     private String hotelName;
     private String description;
     private String address;
-//    private String imageUrl;
+    private String imageUrl;
     private String checkInTime;
     private String checkOutTime;
 
     public HotelListWrapper(Integer id, String hotelName, String description,
-                            String address, String checkInTime, String checkOutTime) {
+                            String address,String imageUrl, String checkInTime, String checkOutTime) {
         this.id = id;
         this.hotelName = hotelName;
         this.description = description;
         this.address = address;
-//        this.imageUrl = imageUrl;
+        this.imageUrl = "http://localhost:8080" + imageUrl;
         this.checkInTime = checkInTime;
         this.checkOutTime = checkOutTime;
     }

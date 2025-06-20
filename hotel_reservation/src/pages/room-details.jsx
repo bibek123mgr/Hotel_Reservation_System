@@ -1,12 +1,12 @@
 import { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useLocation } from "react-router-dom";
-import { fetchRoom } from "../app/features/room/roomSlice";
-import {
-    X,
-    ChevronLeft,
-} from "lucide-react";
+import { fetchReviews, fetchRoom } from "../app/features/room/roomSlice";
+import { X, ChevronLeft, Star } from "lucide-react";
 import BookingForm from "../components/booking-form";
+import { User } from "lucide-react";
+import { Clock } from "lucide-react";
+import { StarHalf } from "lucide-react";
 
 export default function RoomDetails() {
     const [activeTab, setActiveTab] = useState("overview");
@@ -16,13 +16,16 @@ export default function RoomDetails() {
     const roomCategoryId = queryParams.get('room_category');
 
     const dispatch = useDispatch();
-    const { room, loading, error } = useSelector((state) => state.room);
+    const { room, loading, error, reviews, reviewsLoading, reviewsError } = useSelector((state) => state.room);
 
     useEffect(() => {
         if (hotelId && roomCategoryId) {
             dispatch(fetchRoom({ hotelId, roomCategoryId }));
+            dispatch(fetchReviews({ hotelId, roomCategoryId }));
         }
     }, [dispatch, hotelId, roomCategoryId]);
+
+    const isAvaiableRoom = room && room.roomCount > 0 ? true : false;
 
     if (loading) {
         return (
@@ -67,16 +70,12 @@ export default function RoomDetails() {
         );
     }
 
-    // Multiple room images for gallery effect
     const roomImages = [
         "https://images.unsplash.com/photo-1611892440504-42a792e24d32?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=500",
         "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=500",
         "https://images.unsplash.com/photo-1590490360182-c33d57733427?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=500",
     ];
 
-
-
-    // Custom Tab Component
     const Tab = ({ value, children }) => (
         <button
             onClick={() => setActiveTab(value)}
@@ -88,7 +87,6 @@ export default function RoomDetails() {
             {children}
         </button>
     );
-
 
     const Button = ({ children, className = "", variant = "default", onClick, ...props }) => {
         const baseClasses = "inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2";
@@ -110,14 +108,8 @@ export default function RoomDetails() {
         );
     };
 
-    const Separator = ({ className = "" }) => (
-        <hr className={`border-t border-gray-200 ${className}`} />
-    );
-
-
     return (
         <div className="font-sans text-neutral-dark bg-gray-50 min-h-screen">
-            {/* Back button */}
             <div className="bg-white py-4 shadow-sm">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <button className="flex items-center text-gray-600 hover:text-blue-500 transition-colors">
@@ -128,7 +120,6 @@ export default function RoomDetails() {
             </div>
 
             <div className="relative z-10 max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
-                {/* Room title and basic info */}
                 <div className="flex flex-col md:flex-row justify-between items-start mb-6">
                     <div>
                         <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
@@ -144,10 +135,8 @@ export default function RoomDetails() {
                             {room.roomCount ?? 0} room{room.roomCount === 1 ? "" : "s"} available
                         </span>
                     </div>
-
                 </div>
 
-                {/* Image gallery */}
                 <div className="relative mb-10 rounded-xl overflow-hidden shadow-lg">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-2 h-[60vh]">
                         <div className="col-span-2 row-span-2 relative">
@@ -174,7 +163,6 @@ export default function RoomDetails() {
                     </div>
                 </div>
 
-                {/* Reserve Now button - fixed at bottom on mobile */}
                 <div className="fixed bottom-0 left-0 right-0 bg-white shadow-lg p-4 md:hidden z-20">
                     <div className="flex justify-between items-center mb-2">
                         <div>
@@ -182,12 +170,9 @@ export default function RoomDetails() {
                             <span className="text-sm text-gray-500"> / night</span>
                         </div>
                     </div>
-
                 </div>
 
-                {/* Content tabs and booking card */}
                 <div className="flex flex-col lg:flex-row gap-8">
-                    {/* Left column - Room details */}
                     <div className="flex-1">
                         <div className="bg-white rounded-xl shadow-sm overflow-hidden mb-8">
                             <div className="border-b">
@@ -198,7 +183,6 @@ export default function RoomDetails() {
                             </div>
 
                             <div className="p-6">
-                                {/* Overview tab */}
                                 {activeTab === "overview" && (
                                     <div className="space-y-8">
                                         <div>
@@ -211,71 +195,91 @@ export default function RoomDetails() {
                                     </div>
                                 )}
 
-                                {/* {activeTab === "reviews" && (
+                                {activeTab === "reviews" && (
                                     <div className="space-y-6">
-                                        <div className="flex justify-between items-center">
-                                            <h2 className="text-xl font-bold text-gray-900">Guest Reviews</h2>
-                                            <div className="flex items-center bg-blue-500/10 px-3 py-1.5 rounded-full">
-                                                <Star className="h-4 w-4 fill-yellow-400 text-yellow-400 mr-1" />
-                                                <span className="font-semibold">4.8</span>
-                                                <span className="text-gray-500 text-sm ml-1">/ 5</span>
+                                        {reviewsLoading ? (
+                                            <div className="flex justify-center">
+                                                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
                                             </div>
-                                        </div>
-
-                                        <div className="space-y-6">
-                                            {[
-                                                {
-                                                    name: "Sarah J.",
-                                                    date: "March 15, 2025",
-                                                    rating: 5,
-                                                    comment: "Beautiful room with amazing views. The bed was incredibly comfortable and the staff were very helpful. Would definitely stay here again!"
-                                                },
-                                                {
-                                                    name: "Michael T.",
-                                                    date: "February 28, 2025",
-                                                    rating: 4,
-                                                    comment: "Great location and excellent amenities. The room was spacious and clean. Only minor issue was the air conditioning was a bit noisy."
-                                                },
-                                                {
-                                                    name: "Emma L.",
-                                                    date: "January 12, 2025",
-                                                    rating: 5,
-                                                    comment: "Perfect stay! The room exceeded my expectations. Everything was spotless and the rainfall shower was amazing. Highly recommend!"
-                                                }
-                                            ].map((review, index) => (
-                                                <div key={index} className="border-b border-gray-200 pb-6 last:border-0">
-                                                    <div className="flex justify-between items-start mb-2">
-                                                        <div>
-                                                            <h3 className="font-semibold text-gray-900">{review.name}</h3>
-                                                            <p className="text-sm text-gray-500">{review.date}</p>
-                                                        </div>
-                                                        <div className="flex">
-                                                            {[...Array(review.rating)].map((_, i) => (
-                                                                <Star key={i} className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                                                            ))}
+                                        ) : reviewsError ? (
+                                            <div className="bg-red-50 p-4 rounded-lg text-red-600">
+                                                Failed to load reviews: {reviewsError}
+                                            </div>
+                                        ) : (
+                                            Array.isArray(reviews) && reviews.length > 0 ? (
+                                                <div className="space-y-6">
+                                                    <div className="flex items-center justify-between">
+                                                        <h3 className="text-xl font-bold text-gray-900">
+                                                            Customer Reviews ({reviews.length})
+                                                        </h3>
+                                                        <div className="flex items-center bg-blue-50 px-3 py-1 rounded-full">
+                                                            <Star className="h-4 w-4 fill-yellow-400 text-yellow-400 mr-1" />
+                                                            <span className="font-medium">
+                                                                {reviews.reduce((acc, review) => acc + review.star, 0) / reviews.length}
+                                                            </span>
                                                         </div>
                                                     </div>
-                                                    <p className="text-gray-700">{review.comment}</p>
-                                                </div>
-                                            ))}
-                                        </div>
 
-                                        <Button
-                                            variant="outline"
-                                            className="w-full py-2"
-                                        >
-                                            View all 142 reviews
-                                        </Button>
+                                                    {reviews.map((review) => {
+                                                        const fullStars = Math.floor(review.star);
+                                                        const hasHalfStar = review.star % 1 >= 0.5;
+
+                                                        return (
+                                                            <div key={review.id} className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
+                                                                <div className="flex justify-between items-start mb-4">
+                                                                    <div className="flex items-center">
+                                                                        <div className="bg-blue-100 p-2 rounded-full mr-3">
+                                                                            <User className="h-5 w-5 text-blue-600" />
+                                                                        </div>
+                                                                        <div>
+                                                                            <h4 className="font-semibold text-gray-900">{review.userName}</h4>
+                                                                            <div className="flex items-center text-sm text-gray-500">
+                                                                                <Clock className="h-3 w-3 mr-1" />
+                                                                                <span>
+                                                                                    {new Date(review.createdAt).toLocaleDateString('en-US', {
+                                                                                        year: 'numeric',
+                                                                                        month: 'long',
+                                                                                        day: 'numeric'
+                                                                                    })}
+                                                                                </span>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div className="flex items-center">
+                                                                        {[...Array(fullStars)].map((_, i) => (
+                                                                            <Star key={`full-${i}`} className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                                                                        ))}
+                                                                        {hasHalfStar && (
+                                                                            <StarHalf className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                                                                        )}
+                                                                        {[...Array(5 - fullStars - (hasHalfStar ? 1 : 0))].map((_, i) => (
+                                                                            <Star key={`empty-${i}`} className="h-4 w-4 text-gray-300" />
+                                                                        ))}
+                                                                    </div>
+                                                                </div>
+                                                                <p className="text-gray-700">{review.description}</p>
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </div>
+                                            ) : (
+                                                <div className="text-center py-8">
+                                                    <div className="mx-auto w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                                                        <Star className="h-8 w-8 text-gray-400" />
+                                                    </div>
+                                                    <h4 className="text-lg font-medium text-gray-900 mb-1">No reviews yet</h4>
+                                                    <p className="text-gray-500">Be the first to review this room</p>
+                                                </div>
+                                            )
+                                        )}
                                     </div>
-                                )} */}
+                                )}
                             </div>
                         </div>
                     </div>
 
-                    <div className="w-full lg:w-96 hidden md:block">
-                        <div className="bg-white rounded-xl shadow-sm sticky top-8">
-                            <BookingForm roomCategoryId={roomCategoryId} hotelId={hotelId} />
-                        </div>
+                    <div className="hidden lg:block lg:w-[320px]">
+                        <BookingForm hotelId={hotelId} roomCategoryId={roomCategoryId} isAvaiableRoom={isAvaiableRoom} />
                     </div>
                 </div>
             </div>

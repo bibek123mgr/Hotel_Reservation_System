@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
+import { AUTHAPI } from '../../../api/axiosConfig';
 
 const API_URL = 'http://localhost:8080/api/v1/auth';
 
@@ -11,8 +12,8 @@ const initialState = {
     error: null,
     otpVerified: false,
     message: null,
+    userProfile: null,
 };
-
 export const loginUser = createAsyncThunk(
     'auth/loginUser',
     async ({ email, password }, { rejectWithValue }) => {
@@ -25,6 +26,24 @@ export const loginUser = createAsyncThunk(
             } else {
                 return rejectWithValue('Network error');
             }
+        }
+    }
+);
+
+
+export const getUserProfile = createAsyncThunk(
+    'auth/getUserProfile',
+    async (_, { rejectWithValue }) => {
+        try {
+            const { data } = await AUTHAPI.get('v1/auth/getuserprofile');
+            console.log("i am user profile", data);
+
+            return data;
+        } catch (error) {
+            console.log(error);
+            return rejectWithValue(
+                error.response?.data?.message || 'Login failed'
+            );
         }
     }
 );
@@ -124,6 +143,20 @@ const authSlice = createSlice({
         handleAsyncAction(forgotPassword);
         handleAsyncAction(verifyOtp);
         handleAsyncAction(resetPassword);
+
+        builder
+            .addCase(getUserProfile.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(getUserProfile.fulfilled, (state, action) => {
+                state.loading = false;
+                state.userProfile = action.payload;
+            })
+            .addCase(getUserProfile.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload;
+            });
     },
 });
 

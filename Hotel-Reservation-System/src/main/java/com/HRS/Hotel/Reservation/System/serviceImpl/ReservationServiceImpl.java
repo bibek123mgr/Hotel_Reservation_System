@@ -70,6 +70,8 @@ public class ReservationServiceImpl implements ReservationService {
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
             UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
 
+            Integer userId=userPrincipal.getId();
+
             Optional<Room> roomOpt = findAvailableRoomForDateRange(
                     reservationRequestWrapper.getRoomCategoryId(),
                     reservationRequestWrapper.getHotelId(),
@@ -110,7 +112,7 @@ public class ReservationServiceImpl implements ReservationService {
                     String pidx = jsonResponse.get("pidx").asText();
                     String paymentUrl = jsonResponse.get("payment_url").asText();
 
-                    payment = mapPaymentData(reservationRequestWrapper, pidx);
+                    payment = mapPaymentData(reservationRequestWrapper, pidx,userId,room);
                     payment.setPaymentStatus(PaymentStatus.PENDING);
                     paymentId = paymentDao.save(payment).getId();
 
@@ -118,7 +120,9 @@ public class ReservationServiceImpl implements ReservationService {
                             reservationRequestWrapper,
                             paymentId,
                             ReservationStatus.PENDING,
-                            price
+                            price,
+                            userId,
+                            room
                     );
                     reservationDao.save(reservation);
 
@@ -133,7 +137,7 @@ public class ReservationServiceImpl implements ReservationService {
             } else if (reservationRequestWrapper.getPaymentMethod() == PaymentMethod.CASH) {
                 String pidx = UUID.randomUUID().toString();
 
-                payment = mapPaymentData(reservationRequestWrapper, pidx);
+                payment = mapPaymentData(reservationRequestWrapper, pidx,userId,room);
                 payment.setPaymentStatus(PaymentStatus.PENDING);
                 paymentId = paymentDao.save(payment).getId();
 
@@ -149,7 +153,9 @@ public class ReservationServiceImpl implements ReservationService {
                         reservationRequestWrapper,
                         paymentId,
                         ReservationStatus.CONFIRMED,
-                        price
+                        price,
+                        userId,
+                        room
                 );
                 reservationDao.save(reservation);
 
@@ -213,20 +219,16 @@ public class ReservationServiceImpl implements ReservationService {
         mailService.sendMail(user.getEmail(), subject, body);
     }
 
-    private Payment mapPaymentData(ReservationRequestWrapper reservationRequestWrapper,String pidx) {
+    private Payment mapPaymentData(ReservationRequestWrapper reservationRequestWrapper,String pidx,Integer userId,Room room) {
         Payment payment = new Payment();
 
         Hotel hotel = new Hotel();
         hotel.setId(reservationRequestWrapper.getHotelId());
 
-        Room room = new Room();
-        room.setId(reservationRequestWrapper.getRoomId());
-
         User createdBy = new User();
-        createdBy.setId(reservationRequestWrapper.getCreatedBy());
-
+        createdBy.setId(userId);
         payment.setTransactionId(pidx);
-        payment.setAmount(reservationRequestWrapper.getPrice());
+        payment.setAmount(room.getPrice());
         payment.setPaymentMethod(reservationRequestWrapper.getPaymentMethod());
         payment.setPaymentStatus(PaymentStatus.PENDING);
         payment.setHotel(hotel);
@@ -415,7 +417,7 @@ public class ReservationServiceImpl implements ReservationService {
         }
         return new ResponseEntity<>(new ReservationResponseWrapper(), HttpStatus.INTERNAL_SERVER_ERROR);    }
 
-    private Reservation buildReservationFromRequest(ReservationRequestWrapper wrapper,Integer paymentId,ReservationStatus reservationStatus,Double price) {
+    private Reservation buildReservationFromRequest(ReservationRequestWrapper wrapper,Integer paymentId,ReservationStatus reservationStatus,Double price,Integer userId,Room room) {
         Reservation reservation = new Reservation();
 
         Hotel hotel = new Hotel();
@@ -427,14 +429,11 @@ public class ReservationServiceImpl implements ReservationService {
         RoomCategory roomCategory = new RoomCategory();
         roomCategory.setId(wrapper.getRoomCategoryId());
 
-        Room room = new Room();
-        room.setId(wrapper.getRoomId());
-
         User bookedBy = new User();
-        bookedBy.setId(wrapper.getBookedBy());
+        bookedBy.setId(userId);
 
         User createdBy = new User();
-        createdBy.setId(wrapper.getCreatedBy());
+        createdBy.setId(userId);
 
         reservation.setHotel(hotel);
         reservation.setPayment(payment);
@@ -448,11 +447,6 @@ public class ReservationServiceImpl implements ReservationService {
         reservation.setCheckOutDate(wrapper.getCheckOutDate());
         reservation.setNumberOfGuests(wrapper.getNumberOfGuests());
         reservation.setStatus(true);
-
-        // Remove manual timestamp setting - let auditing handle it
         return reservation;
     }
-
-
-
 }

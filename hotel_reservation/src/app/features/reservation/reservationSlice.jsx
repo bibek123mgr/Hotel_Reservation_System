@@ -2,19 +2,49 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
 import { AUTHAPI } from '../../../api/axiosConfig';
 
-const API_URL = 'http://localhost:8080/api/v1/reservations';
+const API_URL = 'http://localhost:8080/api/v1/reservations//user/';
 
 export const fetchReservations = createAsyncThunk(
     'reservations/fetchReservations',
-    async (_, { rejectWithValue }) => {
+    async ({ userId }, { rejectWithValue }) => {
         try {
-            const { data } = await axios.get(API_URL);
+            const { data } = await AUTHAPI.get(`/v1/reservations/user/${userId}`);
             return data;
         } catch (error) {
             return rejectWithValue(error.response?.data?.message || 'Failed to fetch reservations');
         }
     }
 );
+
+export const cancelReservations = createAsyncThunk(
+    'reservations/cancelReservations',
+    async ({ id }, { rejectWithValue }) => {
+        try {
+            const { data } = await AUTHAPI.patch(`/v1/reservations/${id}/CANCELLED`);
+            return data;
+        } catch (error) {
+            return rejectWithValue(error.response?.data?.message || 'Failed to fetch reservations');
+        }
+    }
+);
+
+export const createReviews = createAsyncThunk(
+    'reservations/createReviews',
+    async (createCommentRequestWrapper, { rejectWithValue }) => {
+
+        try {
+            console.log(createCommentRequestWrapper);
+
+            const { data } = await AUTHAPI.post(`/v1/create-comment`,
+                createCommentRequestWrapper
+            );
+            return data;
+        } catch (error) {
+            return rejectWithValue(error.response?.data?.message || 'Failed to fetch reservations');
+        }
+    }
+);
+
 
 export const createReservation = createAsyncThunk(
     'reservations/createReservation',

@@ -8,6 +8,7 @@ import org.hibernate.annotations.DynamicUpdate;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+import org.springframework.data.jpa.repository.Query;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
@@ -20,6 +21,12 @@ import java.time.LocalDateTime;
 @EntityListeners(AuditingEntityListener.class)
 @NamedQuery(name = "SubscriptionPlan.findBySubscriptionPlanName",query = "SELECT sp FROM SubscriptionPlan sp WHERE sp.name=:name AND sp.status=true")
 
+@NamedQuery(
+        name = "SubscriptionPlan.getAllActiveSubscriptionPlans",
+        query = "SELECT new com.HRS.Hotel.Reservation.System.wrapper.CreateSubscriptionWrapper(" +
+                "sp.id, sp.name, sp.features, sp.description, sp.monthlyPrice, sp.yearlyPrice) " +
+                "FROM SubscriptionPlan sp WHERE sp.status = true ORDER BY sp.createdAt DESC"
+)
 public class SubscriptionPlan implements Serializable {
 
   @Id
@@ -30,12 +37,6 @@ public class SubscriptionPlan implements Serializable {
 
   private Double monthlyPrice;
   private Double yearlyPrice;
-
-  private Double monthlyOfferPercentage;
-  private Double yearlyOfferPercentage;
-
-  private Double discountedMonthlyPrice;
-  private Double discountedYearlyPrice;
 
   private String description;
   private String features;

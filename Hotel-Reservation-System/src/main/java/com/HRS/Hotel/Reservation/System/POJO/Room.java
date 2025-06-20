@@ -32,7 +32,8 @@ import java.time.LocalDateTime;
                         "r.description, " +
                         "r.roomStatus, " +
                         "r.status, " +
-                        "r.createdAt) " +
+                        "r.createdAt, " +
+                        "r.imageUrl) " +
                         "FROM Room r " +
                         "JOIN r.hotel h " +
                         "JOIN r.roomCategory rc " +
@@ -76,7 +77,8 @@ import java.time.LocalDateTime;
                         "r.description, " +
                         "r.roomStatus, " +
                         "r.status, " +
-                        "r.createdAt) " +
+                        "r.createdAt, " +
+                        "r.imageUrl) " +
                         "FROM Room r " +
                         "JOIN r.hotel h " +
                         "JOIN r.roomCategory rc " +
@@ -103,13 +105,43 @@ import java.time.LocalDateTime;
                         "     WHERE r2.roomStatus = com.HRS.Hotel.Reservation.System.enums.RoomStatus.AVAILABLE " +
                         "     AND r2.status = true " +
                         "     AND r2.hotel.id = r.hotel.id " +
-                        "     AND r2.roomCategory.id = r.roomCategory.id)" +
-                        ") " +
+                        "     AND r2.roomCategory.id = r.roomCategory.id), " +
+                        "r.imageUrl) " +
                         "FROM Room r " +
                         "JOIN r.hotel h " +
                         "JOIN r.roomCategory rc " +
-                        "WHERE r.roomStatus = com.HRS.Hotel.Reservation.System.enums.RoomStatus.AVAILABLE " +
-                        "AND r.status = true " +
+                        "WHERE r.status = true " +
+                        "GROUP BY r.hotel.id, r.roomCategory.id " +
+                        "ORDER BY r.hotel.id, r.roomCategory.id"
+        ),
+
+        @NamedQuery(
+                name = "RoomDao.getAllSpecificHotelRoomForPublic",
+                query = "SELECT NEW com.HRS.Hotel.Reservation.System.wrapper.RoomResponseWrapper(" +
+                        "    MIN(r.id), " +
+                        "    MIN(r.hotel.id), " +
+                        "    MIN(r.hotel.hotelName), " +
+                        "    MIN(r.roomNumber), " +
+                        "    MIN(r.roomTitle), " +
+                        "    MIN(r.roomCategory.id), " +
+                        "    MIN(r.roomCategory.roomCategoryType), " +
+                        "    MIN(r.floor), " +
+                        "    MIN(r.capacity), " +
+                        "    MIN(r.price), " +
+                        "    MIN(r.description), " +
+                        "    r.roomStatus, " +
+                        "    r.status, " +
+                        "    MIN(r.createdAt), " +
+                        "    (SELECT COUNT(r2) FROM Room r2 " +
+                        "     WHERE r2.status = true " +
+                        "     AND r2.hotel.id = r.hotel.id " +
+                        "     AND r2.roomCategory.id = r.roomCategory.id), " +
+                        "r.imageUrl) " +
+                        "FROM Room r " +
+                        "JOIN r.hotel h " +
+                        "JOIN r.roomCategory rc " +
+                        "WHERE r.status = true " +
+                        "and r.hotel.id =:hotelId " +
                         "GROUP BY r.hotel.id, r.roomCategory.id " +
                         "ORDER BY r.hotel.id, r.roomCategory.id"
         ),
@@ -129,7 +161,8 @@ import java.time.LocalDateTime;
                         "r.description, " +
                         "r.roomStatus, " +
                         "r.status, " +
-                        "r.createdAt) " +
+                        "r.createdAt, " +
+                        "r.imageUrl) " +
                         "FROM Room r " +
                         "JOIN r.hotel h " +
                         "JOIN r.roomCategory rc " +
@@ -156,13 +189,12 @@ import java.time.LocalDateTime;
                         "     WHERE r2.roomStatus = com.HRS.Hotel.Reservation.System.enums.RoomStatus.AVAILABLE " +
                         "     AND r2.status = true " +
                         "     AND r2.hotel.id = :hotelId " +
-                        "     AND r2.roomCategory.id = :roomCategoryId)" +
-                        ") " +
+                        "     AND r2.roomCategory.id = :roomCategoryId), " +
+                        "   r.imageUrl) " +
                         "FROM Room r " +
                         "JOIN r.hotel h " +
                         "JOIN r.roomCategory rc " +
-                        "WHERE r.roomStatus = com.HRS.Hotel.Reservation.System.enums.RoomStatus.AVAILABLE " +
-                        "AND r.status = true " +
+                        "WHERE r.status = true " +
                         "AND r.hotel.id = :hotelId " +
                         "AND r.roomCategory.id = :roomCategoryId " +
                         "ORDER BY r.id ASC " +
@@ -196,9 +228,8 @@ public class Room implements Serializable {
     @JoinColumn(name = "room_category_id", nullable = false, foreignKey = @ForeignKey(name = "FK_room_category"))
     private RoomCategory roomCategory;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "room_image_url", foreignKey = @ForeignKey(name = "FK_room_image_url"))
-    private MediaFile imageUrl;
+
+    private String imageUrl;
 
     @Enumerated(EnumType.STRING)
     private RoomStatus roomStatus = RoomStatus.AVAILABLE;

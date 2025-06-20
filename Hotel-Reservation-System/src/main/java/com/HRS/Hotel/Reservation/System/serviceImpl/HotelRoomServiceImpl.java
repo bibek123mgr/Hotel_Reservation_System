@@ -22,6 +22,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -33,6 +34,7 @@ import java.nio.file.StandardCopyOption;
 import java.time.LocalDateTime;
 import java.util.*;
 
+@Transactional
 @Service
 public class HotelRoomServiceImpl implements HotelRoomService {
 
@@ -61,12 +63,11 @@ public class HotelRoomServiceImpl implements HotelRoomService {
             UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
             hotelId=userPrincipal.getHotelId();
             userId=userPrincipal.getHotelId();
-            MediaFile mediaFile=saveFileToDiskAndDatabase(file);
+            String filename=saveFileToDisk(file);
 
             Room room=mapRoomRequestWrapper((roomRequestWrapper),hotelId,userId);
-            room.setImageUrl(mediaFile);
+            room.setImageUrl(filename);
             roomDao.save(room);
-
             return HotelUtils.getResponse(HotelConstant.DATA_SUCCESSFULLY_SAVED, HttpStatus.CREATED);
         } catch (Exception e) {
             logger.error("Error Occurred at HotelRoomServiceImpl: {}",e.getMessage(),e);
@@ -74,8 +75,11 @@ public class HotelRoomServiceImpl implements HotelRoomService {
         return HotelUtils.getResponse(HotelConstant.INTERNAL_SERVER_ERROR, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
-    private MediaFile saveFileToDiskAndDatabase(MultipartFile file) throws Exception {
+    private String saveFileToDisk(MultipartFile file) throws Exception {
         try {
+            if (file == null || file.isEmpty()) {
+                return null;
+            }
             String originalFileName = StringUtils.cleanPath(Objects.requireNonNull(file.getOriginalFilename()));
             String fileType = originalFileName.contains(".")
                     ? originalFileName.substring(originalFileName.lastIndexOf("."))
@@ -91,48 +95,34 @@ public class HotelRoomServiceImpl implements HotelRoomService {
             Path filePath = uploadPath.resolve(fileName);
             Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
 
-            MediaFile mediaFile = mapDataInMediaFile(fileName, fileType);
-            mediaFileDao.save(mediaFile);
-            return mediaFile;
+            return "/uploads/" + fileName;
+
         } catch (IOException e) {
             logger.error("File operation failed", e);
             throw new Exception("File operation failed", e);
-        } catch (Exception e) {
-            logger.error("Database operation failed", e);
-            throw new Exception("Database operation failed", e);
         }
-    }
-
-    private MediaFile mapDataInMediaFile(String filename, String extension) {
-        MediaFile mediaFile = new MediaFile();
-        mediaFile.setMediaUrl("/uploads/" + filename);
-        mediaFile.setMediaType(extension);
-        mediaFile.setOwnerType("rooms");
-//        mediaFile.setSaved_by(Integer.parseInt(metaData.get("userId")));
-        mediaFile.setCreatedAt(LocalDateTime.now());
-        mediaFile.setUpdatedAt(LocalDateTime.now());
-//        mediaFile.setStatus(1);
-        return mediaFile;
     }
 
 
 
     @Override
-    public ResponseEntity<String> updateHotelRoom(RoomRequestWrapper roomRequestWrapper, Integer roomId) {
+    public ResponseEntity<String> updateHotelRoom(RoomRequestWrapper roomRequestWrapper,MultipartFile file,Integer roomId) {
         try{
             Room existingRoom = roomDao.findById(roomId).orElse(null);
             if (existingRoom == null) {
                 return HotelUtils.getResponse("Room not found with ID: " + roomId, HttpStatus.NOT_FOUND);
             }else {
-
                 RoomCategory roomCategory = new RoomCategory();
                 roomCategory.setId(roomRequestWrapper.getRoomCategoryId());
+                if(file != null){
+                    String filename=saveFileToDisk(file);
+                        existingRoom.setImageUrl(filename);
 
+                }
                 existingRoom.setRoomStatus(roomRequestWrapper.getRoomStatus());
                 existingRoom.setRoomCategory(roomCategory);
                 existingRoom.setRoomNumber(roomRequestWrapper.getRoomNumber());
                 existingRoom.setStatus(true);
-
                 roomDao.save(existingRoom);
                 return HotelUtils.getResponse(HotelConstant.DATA_SUCCESSFULLY_UPDATED, HttpStatus.OK);
             }
@@ -205,6 +195,17 @@ public class HotelRoomServiceImpl implements HotelRoomService {
     }
 
     @Override
+    public ResponseEntity<List<RoomResponseWrapper>> getAllSpecificHotelRoomForPublic(Integer hotelId) {
+        try {
+            List<RoomResponseWrapper> rooms = roomDao.getAllSpecificHotelRoomForPublic(hotelId);
+            return new ResponseEntity<>(rooms, HttpStatus.OK);
+        } catch (Exception e) {
+            logger.error("Error Occurred at HotelRoomServiceImpl: {}", e.getMessage(), e);
+            return new ResponseEntity<>(new ArrayList<>(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @Override
     public ResponseEntity<RoomResponseWrapper> getHotelRoomDetailForPublic(Integer hotelId, Integer roomCategoryId) {
         try {
             RoomResponseWrapper rooms = roomDao.getHotelRoomDetailForPublic(hotelId,roomCategoryId);
@@ -246,6 +247,8 @@ public class HotelRoomServiceImpl implements HotelRoomService {
             return HotelUtils.getResponse(HotelConstant.INTERNAL_SERVER_ERROR, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+
+
 
 
     public Room mapRoomRequestWrapper(RoomRequestWrapper roomRequestWrapper,Integer hotelId,Integer userId){

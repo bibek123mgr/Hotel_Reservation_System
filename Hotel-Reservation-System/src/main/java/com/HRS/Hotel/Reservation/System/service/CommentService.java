@@ -12,5 +12,6 @@ public interface CommentService {
 
     ResponseEntity<List<CommentResponseWrapper>> getCommentForHotelAdmin(Integer id);
 
-    ResponseEntity<List<CommentResponseWrapper>> getCommentForPublic(GetCommentRequestWrapper getCommentRequestWrapper);
+    ResponseEntity<List<CommentResponseWrapper>> getCommentForPublic(Integer hotelId,
+                                                                     Integer roomCategoryId);
 }

@@ -28,6 +28,9 @@ public interface RoomDao extends JpaRepository<Room,Integer> {
     List<RoomResponseWrapper> getRoomsByHotelId(@Param("hotelId") Integer hotelId);
 
 
+    @Query(name = "RoomDao.getAllSpecificHotelRoomForPublic")
+    List<RoomResponseWrapper> getAllSpecificHotelRoomForPublic(@Param("hotelId") Integer hotelId);
+
     @Query(name = "RoomDao.getAllHotelRoomForPublic")
     List<RoomResponseWrapper> getAllHotelRoomForPublic();
 

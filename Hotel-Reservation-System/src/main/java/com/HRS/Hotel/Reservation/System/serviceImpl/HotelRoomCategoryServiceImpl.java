@@ -5,12 +5,15 @@ import com.HRS.Hotel.Reservation.System.POJO.*;
 import com.HRS.Hotel.Reservation.System.constant.HotelConstant;
 import com.HRS.Hotel.Reservation.System.service.HotelRoomCategoryService;
 import com.HRS.Hotel.Reservation.System.utils.HotelUtils;
+import com.HRS.Hotel.Reservation.System.wrapper.CreateCategoryWrapper;
 import com.HRS.Hotel.Reservation.System.wrapper.HotelRoomCategoryWrapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -28,18 +31,25 @@ public class HotelRoomCategoryServiceImpl implements HotelRoomCategoryService {
     private HotelRoomCategoryDao hotelRoomCategoryDao;
 
     @Override
-    public ResponseEntity<String> addHotelRoomsCategory(Map<String, String> requestMap) {
-        try{
-            if(validateSaveNewHotelRoomCategoryMap(requestMap)){
-                hotelRoomCategoryDao.save(mapSaveRoomCategory(requestMap));
+    public ResponseEntity<String> addHotelRoomsCategory(CreateCategoryWrapper requestMap) {
+        try {
+            if (validateSaveNewHotelRoomCategoryMap(requestMap)) {
+                Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+                if (authentication == null || !authentication.isAuthenticated()) {
+                    return HotelUtils.getResponse("Unauthorized access", HttpStatus.UNAUTHORIZED);
+                }
+
+                UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
+                Integer userId = userPrincipal.getId();
+                hotelRoomCategoryDao.save(mapSaveRoomCategory(requestMap, userId));
                 return HotelUtils.getResponse(HotelConstant.DATA_SUCCESSFULLY_SAVED, HttpStatus.CREATED);
-            }else{
-                return HotelUtils.getResponse(HotelConstant.INVALID_DATA, HttpStatus.INTERNAL_SERVER_ERROR);
+            } else {
+                return HotelUtils.getResponse(HotelConstant.INVALID_DATA, HttpStatus.BAD_REQUEST);
             }
         } catch (Exception e) {
-            logger.error("Error occurred in HotelRoomCategoryServiceImpl {}",e.getMessage(),e);
+            logger.error("Error occurred in HotelRoomCategoryServiceImpl {}", e.getMessage(), e);
+            return HotelUtils.getResponse(HotelConstant.INTERNAL_SERVER_ERROR, HttpStatus.INTERNAL_SERVER_ERROR);
         }
-        return HotelUtils.getResponse(HotelConstant.INTERNAL_SERVER_ERROR, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     @Override
@@ -54,11 +64,10 @@ public class HotelRoomCategoryServiceImpl implements HotelRoomCategoryService {
     }
 
     @Override
-    public ResponseEntity<String> updateHotelRoomsCategory(Map<String, String> requestMap) {
+    public ResponseEntity<String> updateHotelRoomsCategory(CreateCategoryWrapper requestMap) {
         try{
-            if(validateSaveNewHotelRoomCategoryMap(requestMap)){
-                Integer id = Integer.parseInt(requestMap.get("id").toString());
-
+            if(validateUpdateNewHotelRoomCategoryMap(requestMap)){
+                Integer id = requestMap.getId();
                 Optional<RoomCategory> category=hotelRoomCategoryDao.findById(id);
                 if(category.isPresent()) {
                     RoomCategory updatedCategory = mapUpdateRoomCategory(requestMap, category.get());
@@ -121,41 +130,32 @@ public class HotelRoomCategoryServiceImpl implements HotelRoomCategoryService {
                     ;
     }
 
-    private boolean validateSaveNewHotelRoomCategoryMap(Map<String, String> requestMap) {
-        return requestMap.containsKey("roomCategoryType")
-                && requestMap.containsKey("mediaId")
-                && requestMap.containsKey("createdBy")
-                && requestMap.containsKey("description")
-                && requestMap.containsKey("isAvailable");
+    private boolean validateSaveNewHotelRoomCategoryMap(CreateCategoryWrapper requestMap) {
+        return requestMap.getRoomCategoryType() != null && !requestMap.getRoomCategoryType().isEmpty()
+                && requestMap.getDescription() != null && !requestMap.getDescription().isEmpty();
     }
 
-    private boolean validateUpdateNewHotelRoomCategoryMap(Map<String, String> requestMap) {
-        return requestMap.containsKey("roomCategoryType")
-                && requestMap.containsKey("id")
-                && requestMap.containsKey("createdBy")
-                && requestMap.containsKey("description")
-                && requestMap.containsKey("isAvailable");
+    private boolean validateUpdateNewHotelRoomCategoryMap(CreateCategoryWrapper requestMap) {
+        return  requestMap.getId() != null &&
+                requestMap.getRoomCategoryType() != null && !requestMap.getRoomCategoryType().isEmpty()
+                && requestMap.getDescription() != null && !requestMap.getDescription().isEmpty();
     }
 
 
-    private RoomCategory mapUpdateRoomCategory(Map<String, String> requestMap,RoomCategory category){
-        category.setRoomCategoryType(requestMap.get("roomCategoryType"));
-        category.setStatus(Boolean.parseBoolean(requestMap.get("isAvailable")));
-        category.setDescription(requestMap.get("description"));
+    private RoomCategory mapUpdateRoomCategory(CreateCategoryWrapper requestMap,RoomCategory category){
+        category.setRoomCategoryType(requestMap.getRoomCategoryType());
+        category.setDescription(requestMap.getDescription());
         return category;
     }
 
-    private RoomCategory mapSaveRoomCategory(Map<String, String> requestMap) {
+    private RoomCategory mapSaveRoomCategory(CreateCategoryWrapper requestMap,Integer userId) {
         RoomCategory roomCategory = new RoomCategory();
-        MediaFile media = new MediaFile();
-        media.setId(Integer.parseInt(requestMap.get("mediaId")));
-        roomCategory.setImageUrl(media);
         User user = new User();
-        user.setId(Integer.parseInt(requestMap.get("createdBy")));
+        user.setId(userId);
         roomCategory.setCreatedBy(user);
-        roomCategory.setRoomCategoryType(requestMap.get("roomCategoryType"));
-        roomCategory.setDescription(requestMap.get("description"));
-        roomCategory.setStatus(Boolean.parseBoolean(requestMap.get("isAvailable")));
+        roomCategory.setRoomCategoryType(requestMap.getRoomCategoryType());
+        roomCategory.setDescription(requestMap.getDescription());
+        roomCategory.setStatus(true);
         return roomCategory;
     }
 

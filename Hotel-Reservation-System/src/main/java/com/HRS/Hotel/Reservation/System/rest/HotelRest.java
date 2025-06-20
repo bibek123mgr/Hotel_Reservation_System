@@ -18,12 +18,18 @@ public interface HotelRest {
     @PostMapping(value = "/auth/hotel-registration", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<String> addHotel(
             @RequestPart("hotelData") HotelCreateRequestWrapper hotelCreateRequestWrapper,
-            @RequestPart("image") MultipartFile imageFile
+            @RequestPart("imageFile") MultipartFile imageFile
     );
 
     @PostMapping(value = "/auth/hotel-update")
     public ResponseEntity<String> updateHotelProfile(
              @RequestBody HotelUpdateRequestWrapper HotelUpdateRequestWrapper
+    );
+
+    @PatchMapping(value = "/auth/hotel-update-file/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<String> updateHotelProfileImage(
+            @RequestPart("imageFile") MultipartFile imageFile,
+            @PathVariable Integer id
     );
 
     @PostMapping("/auth/hotel-signin")

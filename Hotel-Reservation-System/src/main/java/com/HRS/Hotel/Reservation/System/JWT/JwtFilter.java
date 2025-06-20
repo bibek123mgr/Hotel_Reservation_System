@@ -16,9 +16,11 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Service;
+import org.springframework.util.AntPathMatcher;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.List;
 
 @Service
 public class JwtFilter extends OncePerRequestFilter {
@@ -31,6 +33,33 @@ public class JwtFilter extends OncePerRequestFilter {
 
     @Autowired
     private CookieService cookieService;
+
+    private final AntPathMatcher pathMatcher = new AntPathMatcher();
+
+    // Public paths (no token required)
+    private static final List<String> PUBLIC_PATHS = List.of(
+            "/uploads/**","/api/v1/public-comment",
+            "/api/v1/auth/signin-admin",
+            "/api/v1/auth/verify-registration-khalti",
+            "/api/v1/subscription-plans",
+            "/api/v1/hotels",
+            "/api/v1/hotels/near-me",
+            "/api/v1/rooms/public-room-details",
+            "/api/v1/rooms/public",
+            "/api/v1/rooms/public/**",
+            "/api/v1/auth/hotel-signin",
+            "/api/v1/auth/allactivehotels",
+            "/api/v1/auth/signup",
+            "/api/v1/auth/signin",
+            "/api/v1/auth/forgot-password",
+            "/api/v1/auth/verify-otp",
+            "/api/v1/auth/hotel-registration",
+            "/api/v1/promotion-plans"
+    );
+
+    private boolean isPublicPath(String path) {
+        return PUBLIC_PATHS.stream().anyMatch(pattern -> pathMatcher.match(pattern, path));
+    }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -45,23 +74,7 @@ public class JwtFilter extends OncePerRequestFilter {
         }
 
         String path = request.getServletPath();
-        if (path.matches(
-                "/api/v1/public-comment|"
-                        +"/api/v1/auth/signin-admin|"
-                        + "/api/v1/auth/verify-registration-khalti|"
-                        + "/api/v1/subscription-plans|"
-                        + "/api/v1/hotels/near-me|"
-                        + "/api/v1/rooms/public-room-details|"
-                        + "/api/v1/auth/hotel-signin|"
-                        + "/api/v1/auth/allactivehotels|"
-                        + "/api/v1/auth/signup|"
-                        + "/api/v1/auth/signin|"
-                        + "/api/v1/auth/forgot-password|"
-                        + "/api/v1/auth/verify-otp|"
-                        + "/api/v1/auth/hotel-registration|"
-                        + "/api/v1/promotion-plans|"
-                        + "/api/v1/rooms/public"
-        )) {
+        if (isPublicPath(path)) {
             filterChain.doFilter(request, response);
             return;
         }
@@ -101,7 +114,7 @@ public class JwtFilter extends OncePerRequestFilter {
                 return;
             }
         } else {
-            // Reject requests without token:
+            // Reject requests without token
             sendErrorResponse(response, HttpServletResponse.SC_UNAUTHORIZED, "Authorization token missing");
             return;
         }
@@ -127,5 +140,4 @@ public class JwtFilter extends OncePerRequestFilter {
         response.getWriter().flush();
         response.getWriter().close();
     }
-
 }

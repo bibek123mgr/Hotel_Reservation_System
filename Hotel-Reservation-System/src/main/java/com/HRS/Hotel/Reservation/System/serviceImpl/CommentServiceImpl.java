@@ -61,7 +61,10 @@ public class CommentServiceImpl implements CommentService {
             comment.setStar(createCommentRequestWrapper.getStar());
             comment.setDescription(createCommentRequestWrapper.getDescription());
 
+            reservation.setReview(true);
+
             commentDao.save(comment);
+            reservationDao.save(reservation);
 
             return HotelUtils.getResponse(HotelConstant.DATA_SUCCESSFULLY_SAVED, HttpStatus.OK);
         } catch (Exception e) {
@@ -82,11 +85,12 @@ public class CommentServiceImpl implements CommentService {
     }
 
     @Override
-    public ResponseEntity<List<CommentResponseWrapper>> getCommentForPublic(GetCommentRequestWrapper getCommentRequestWrapper) {
+    public ResponseEntity<List<CommentResponseWrapper>> getCommentForPublic(Integer hotelId,
+                                                                            Integer roomCategoryId) {
         try {
             List<CommentResponseWrapper> comments = commentDao.getCommentForPublic(
-                    getCommentRequestWrapper.getHotelId(),
-                    getCommentRequestWrapper.getRoomCategoryId()
+                    hotelId,
+                    roomCategoryId
             );
             return new ResponseEntity<>(comments, HttpStatus.OK);
         } catch (Exception e) {

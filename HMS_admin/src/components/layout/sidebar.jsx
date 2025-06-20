@@ -49,6 +49,12 @@ export default function Sidebar({ onMobileClose }) {
                         <LayoutDashboardIcon className="mr-3 h-5 w-5" />
                         <span>Dashboard</span>
                     </Link>
+                    {role == "super admin" &&
+                        <Link to="/payment" onClick={onMobileClose} className={linkClass("/payment")}>
+                            <PieChartIcon className="mr-3 h-5 w-5" />
+                            <span>Payment</span>
+                        </Link>
+                    }
                     <Link to="/reservations" onClick={onMobileClose} className={linkClass("/reservations")}>
                         <CalendarCheckIcon className="mr-3 h-5 w-5" />
                         <span>Reservations</span>
@@ -61,10 +67,18 @@ export default function Sidebar({ onMobileClose }) {
                         <UsersIcon className="mr-3 h-5 w-5" />
                         <span>Guests</span>
                     </Link>
-                    {/* <Link to="/reports" onClick={onMobileClose} className={linkClass("/reports")}>
-                        <PieChartIcon className="mr-3 h-5 w-5" />
-                        <span>Reports</span>
-                    </Link> */}
+                    {role == "super admin" &&
+                        <Link to="/plans" onClick={onMobileClose} className={linkClass("/plans")}>
+                            <PieChartIcon className="mr-3 h-5 w-5" />
+                            <span>Plans</span>
+                        </Link>
+                    }
+                    {role == "super admin" &&
+                        <Link to="/category" onClick={onMobileClose} className={linkClass("/category")}>
+                            <PieChartIcon className="mr-3 h-5 w-5" />
+                            <span>Room Category</span>
+                        </Link>
+                    }
                     {role == "hotel_admin" && <Link to="/settings" onClick={onMobileClose} className={linkClass("/settings")}>
                         <SettingsIcon className="mr-3 h-5 w-5" />
                         <span>Settings</span>
